@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>インフォみっけ｜みっけシリーズ</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  --bg: #07111f; --bg2: #0d1e33; --bg3: #112240;
+  --cyan: #00c8b8; --blue: #0090e0; --gold: #f0c040;
+  --text: #e8f4f8; --muted: #7a9bb5; --border: #1e3a5a; --card: #0f1f35;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; padding-bottom: 60px; }
+
+/* ヘッダー */
+header { background: linear-gradient(135deg, var(--bg2), #0a1a2e); border-bottom: 1px solid var(--border); padding: 14px 24px; position: sticky; top: 0; z-index: 200; backdrop-filter: blur(12px); }
+.header-inner { max-width: 980px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+.logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, var(--cyan), var(--blue)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900; color: var(--bg); font-family: 'Space Mono', monospace; flex-shrink: 0; }
+.header-text h1 { font-size: 17px; font-weight: 900; letter-spacing: 0.04em; background: linear-gradient(90deg, var(--cyan), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.header-text p { font-size: 10px; color: var(--muted); letter-spacing: 0.06em; }
+.home-btn { margin-left: auto; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 11px; color: var(--cyan); cursor: pointer; transition: all 0.2s; font-family: 'Noto Sans JP', sans-serif; }
+.home-btn:hover { border-color: var(--cyan); }
+
+/* 入口画面 */
+#modePage { max-width: 720px; margin: 0 auto; padding: 56px 20px; text-align: center; }
+.mode-catch { font-size: 12px; color: var(--muted); letter-spacing: 0.12em; margin-bottom: 10px; }
+.mode-title { font-size: 26px; font-weight: 900; line-height: 1.4; margin-bottom: 8px; }
+.mode-title span { background: linear-gradient(90deg, var(--cyan), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.mode-sub { font-size: 12px; color: var(--muted); margin-bottom: 44px; }
+.mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.mode-card { background: var(--card); border: 2px solid var(--border); border-radius: 18px; padding: 28px 22px 24px; cursor: pointer; transition: all 0.25s; text-align: left; position: relative; overflow: hidden; }
+.mode-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 18px 18px 0 0; opacity: 0; transition: opacity 0.2s; }
+.mode-card.shiryo::before { background: linear-gradient(90deg, var(--cyan), var(--blue)); }
+.mode-card.chirashi::before { background: linear-gradient(90deg, var(--gold), #ff9a3c); }
+.mode-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(0,0,0,0.4); }
+.mode-card.shiryo:hover { border-color: var(--cyan); }
+.mode-card.chirashi:hover { border-color: var(--gold); }
+.mode-card:hover::before { opacity: 1; }
+.mode-icon { font-size: 34px; margin-bottom: 12px; display: block; }
+.mode-card-ttl { font-size: 19px; font-weight: 900; margin-bottom: 8px; }
+.mode-card.shiryo .mode-card-ttl { color: var(--cyan); }
+.mode-card.chirashi .mode-card-ttl { color: var(--gold); }
+.mode-card-desc { font-size: 12px; color: var(--muted); line-height: 1.9; margin-bottom: 14px; }
+.mode-feats { list-style: none; }
+.mode-feats li { font-size: 11px; color: var(--text); padding: 3px 0; display: flex; align-items: center; gap: 7px; }
+.mode-card.shiryo .mode-feats li::before { content: '✦'; font-size: 8px; color: var(--cyan); }
+.mode-card.chirashi .mode-feats li::before { content: '✦'; font-size: 8px; color: var(--gold); }
+.mode-arr { position: absolute; bottom: 18px; right: 20px; font-size: 18px; opacity: 0.25; transition: opacity 0.2s; }
+.mode-card:hover .mode-arr { opacity: 1; }
+
+/* ページ共通 */
+.page { display: none; max-width: 980px; margin: 0 auto; padding: 28px 20px; }
+.page.show { display: block; }
+.back-btn { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: 'Noto Sans JP', sans-serif; margin-bottom: 24px; }
+.back-btn:hover { border-color: var(--text); color: var(--text); }
+
+/* 共通UI */
+.step { margin-bottom: 26px; }
+.step-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.step-num { width: 25px; height: 25px; background: linear-gradient(135deg, var(--cyan), var(--blue)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--bg); flex-shrink: 0; }
+.step-num.gld { background: linear-gradient(135deg, var(--gold), #ff9a3c); }
+.step-ttl { font-size: 14px; font-weight: 700; letter-spacing: 0.04em; }
+.step-desc { font-size: 11px; color: var(--muted); margin-left: 35px; margin-top: -6px; margin-bottom: 10px; }
+
+textarea, input[type=text], input[type=url] {
+  width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 13px; padding: 11px 13px; outline: none; transition: border-color 0.2s;
+}
+textarea { resize: vertical; min-height: 130px; line-height: 1.8; }
+textarea:focus, input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,200,184,0.1); }
+textarea::placeholder, input::placeholder { color: var(--muted); }
+
+.lbl { font-size: 11px; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.06em; }
+.input-grp { margin-bottom: 12px; }
+
+.btn-main { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--cyan), var(--blue)); border: none; border-radius: 12px; color: var(--bg); font-size: 15px; font-weight: 900; cursor: pointer; letter-spacing: 0.06em; font-family: 'Noto Sans JP', sans-serif; transition: all 0.25s; box-shadow: 0 4px 20px rgba(0,200,184,0.3); }
+.btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,200,184,0.45); }
+.btn-main:disabled { background: var(--bg3); color: var(--muted); cursor: not-allowed; box-shadow: none; transform: none; }
+.btn-main.gld { background: linear-gradient(135deg, var(--gold), #ff9a3c); box-shadow: 0 4px 20px rgba(240,192,64,0.3); }
+.btn-main.gld:hover { box-shadow: 0 8px 28px rgba(240,192,64,0.45); }
+
+.btn-sec { background: var(--bg3); border: 1px solid var(--cyan); color: var(--cyan); padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: 'Noto Sans JP', sans-serif; }
+.btn-sec:hover { background: var(--cyan); color: var(--bg); }
+.btn-sec.gld { border-color: var(--gold); color: var(--gold); }
+.btn-sec.gld:hover { background: var(--gold); color: var(--bg); }
+.btn-ghost { background: transparent; border: 1px solid var(--muted); color: var(--muted); padding: 10px 18px; border-radius: 10px; font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: 'Noto Sans JP', sans-serif; }
+.btn-ghost:hover { border-color: var(--text); color: var(--text); }
+.btn-row { display: flex; gap: 10px; margin-top: 12px; }
+
+/* スタイルグリッド */
+.sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 9px; }
+.scard { background: var(--card); border: 1.5px solid var(--border); border-radius: 11px; padding: 12px 11px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+.scard:hover { border-color: var(--cyan); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,200,184,0.15); }
+.scard.sel { border-color: var(--cyan); background: linear-gradient(135deg, rgba(0,200,184,0.12), rgba(0,144,224,0.08)); }
+.scard.sel::after { content: '✓'; position: absolute; top: 7px; right: 9px; color: var(--cyan); font-weight: 900; font-size: 13px; }
+.se { font-size: 18px; margin-bottom: 5px; display: block; }
+.snj { font-size: 10px; color: var(--muted); display: block; margin-bottom: 1px; }
+.sne { font-size: 12px; font-weight: 700; color: var(--text); display: block; margin-bottom: 3px; }
+.su { font-size: 10px; color: var(--muted); line-height: 1.4; }
+.btn-auto { display: block; width: 100%; margin-top: 9px; background: transparent; border: 1px dashed var(--muted); color: var(--muted); padding: 9px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: 'Noto Sans JP', sans-serif; }
+.btn-auto:hover { border-color: var(--gold); color: var(--gold); }
+
+/* 出力エリア */
+.out-area { display: none; margin-top: 28px; }
+.out-area.show { display: block; }
+.tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.tab { flex: 1; padding: 9px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: 'Noto Sans JP', sans-serif; border: 1.5px solid var(--border); background: var(--bg3); color: var(--muted); }
+.tab.on { border-color: var(--cyan); color: var(--cyan); background: rgba(0,200,184,0.08); }
+.tp { display: none; }
+.tp.on { display: block; }
+.outbox { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; font-size: 13px; line-height: 2; white-space: pre-wrap; color: var(--text); max-height: 460px; overflow-y: auto; }
+
+/* parsed preview */
+.pp { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 14px; margin-top: 10px; }
+.pp.show { display: block; }
+.pi { display: flex; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+.pi:last-child { border-bottom: none; }
+.pl { color: var(--cyan); font-weight: 700; min-width: 90px; font-size: 11px; }
+.pv { color: var(--text); font-size: 12px; }
+
+/* MJ ブロック */
+.mjb { background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 16px 18px; margin-bottom: 10px; }
+.mjl { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 7px; }
+.mjjp { font-size: 12px; color: var(--muted); line-height: 1.9; margin-bottom: 11px; padding-bottom: 11px; border-bottom: 1px solid var(--border); }
+.mjen { font-family: 'Space Mono', monospace; font-size: 12px; color: #a8e6df; line-height: 1.8; background: rgba(0,200,184,0.05); border-radius: 7px; padding: 11px; white-space: pre-wrap; word-break: break-all; }
+.mjtip { background: rgba(240,192,64,0.07); border: 1px solid rgba(240,192,64,0.25); border-radius: 9px; padding: 11px 14px; font-size: 11px; color: var(--gold); line-height: 1.8; margin-top: 8px; }
+
+/* ======== インフォチラシ ======== */
+.chirashi-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+.preview-box { background: #1a1a2e; border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+.preview-lbl { font-size: 11px; color: var(--gold); letter-spacing: 0.1em; font-weight: 700; margin-bottom: 14px; }
+
+/* チラシ本体 16:9固定 */
+#chirashiDoc {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-width: 640px;
+  margin: 0 auto;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.5);
+  font-family: 'Noto Sans JP', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+.ch-head { padding: 14px 22px 10px; flex-shrink: 0; }
+.ch-tag { display: inline-block; background: rgba(255,255,255,0.22); color: white; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; padding: 2px 10px; border-radius: 20px; margin-bottom: 6px; }
+.ch-title { font-size: 20px; font-weight: 900; color: white; line-height: 1.25; margin-bottom: 4px; }
+.ch-catch { font-size: 11px; color: rgba(255,255,255,0.88); line-height: 1.5; }
+.ch-body { background: white; padding: 12px 22px 8px; flex: 1; min-height: 0; overflow: hidden; }
+.ch-sec { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 2px solid; }
+.ch-desc { font-size: 11px; color: #444; line-height: 1.7; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ch-feats { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.ch-feat { background: #f4f6fb; border-radius: 6px; padding: 7px 10px; font-size: 10px; color: #333; line-height: 1.5; display: flex; align-items: flex-start; gap: 6px; }
+.ch-fnum { width: 17px; height: 17px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; color: white; flex-shrink: 0; margin-top: 1px; }
+.ch-price { padding: 8px 22px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.price-lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.8); }
+.price-val { font-size: 22px; font-weight: 900; color: white; }
+.ch-foot { background: #12203a; padding: 10px 18px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.ch-foot-info { flex: 1; min-width: 0; }
+.frow { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+.flbl { width: 28px; text-align: center; font-size: 8px; font-weight: 700; letter-spacing: 0.07em; padding: 2px 3px; border-radius: 3px; color: white; flex-shrink: 0; }
+.fval { color: #b8d8e8; font-family: 'Space Mono', monospace; font-size: 10px; word-break: break-all; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
+.qr-wrap { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+#qrEl { background: white; padding: 4px; border-radius: 4px; }
+.qr-cap { font-size: 8px; color: #7a9bb5; letter-spacing: 0.06em; }
+
+/* 印刷 */
+@media print {
+  body > *:not(#chirashiDoc) { display: none !important; }
+  #chirashiDoc { position: fixed; top: 0; left: 0; width: 100%; box-shadow: none; border-radius: 0; }
+  body { background: white; }
+}
+
+/* トースト */
+.toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--cyan); color: var(--bg); padding: 9px 24px; border-radius: 30px; font-size: 13px; font-weight: 700; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 999; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+@keyframes fi { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.fi { animation: fi 0.4s ease forwards; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+@media (max-width: 680px) {
+  .mode-cards, .chirashi-wrap { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-icon" onclick="goHome()" style="cursor:pointer;">情</div>
+    <div class="header-text" onclick="goHome()" style="cursor:pointer;">
+      <h1>インフォみっけ</h1>
+      <p>INFOGRAPHIC TOOLKIT — みっけシリーズ</p>
+    </div>
+    <button class="home-btn" onclick="goHome()">⌂ モード選択</button>
+  </div>
+</header>
+
+<!-- 入口 -->
+<div id="modePage">
+  <p class="mode-catch">INFOGRAPHIC TOOLKIT</p>
+  <h2 class="mode-title">何を<span>つくります</span>か？</h2>
+  <p class="mode-sub">目的に合わせて2つのモードから選んでください</p>
+  <div class="mode-cards">
+    <div class="mode-card shiryo" onclick="goMode('shiryo')">
+      <span class="mode-icon">📋</span>
+      <div class="mode-card-ttl">インフォ資料</div>
+      <div class="mode-card-desc">URLやHTMLの内容を読み取り、NotebookLM用設計書とMidJourneyプロンプトを生成します。</div>
+      <ul class="mode-feats">
+        <li>10スタイルから選択</li>
+        <li>NotebookLM投入用テキスト</li>
+        <li>MidJourneyプロンプト（日英）</li>
+        <li>おまかせスタイル推薦</li>
+      </ul>
+      <div class="mode-arr">→</div>
+    </div>
+    <div class="mode-card chirashi" onclick="goMode('chirashi')">
+      <span class="mode-icon">🎯</span>
+      <div class="mode-card-ttl">インフォチラシ</div>
+      <div class="mode-card-desc">商品・資料の情報を入力するだけで、販売用インフォグラフィックをその場で生成します。</div>
+      <ul class="mode-feats">
+        <li>ブラウザ上でリアルタイムプレビュー</li>
+        <li>QRコード自動生成</li>
+        <li>URL・PW・価格を下段表示</li>
+        <li>印刷・PDF保存対応</li>
+      </ul>
+      <div class="mode-arr">→</div>
+    </div>
+  </div>
+</div>
+
+<!-- インフォ資料 -->
+<div class="page" id="shiryoPage">
+  <button class="back-btn" onclick="goHome()">← モード選択に戻る</button>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">1</div><div class="step-ttl">URLまたはHTMLを貼り付ける</div></div>
+    <p class="step-desc">サービスページのHTMLソースや本文テキストをそのまま貼ってください</p>
+    <textarea id="inputArea" placeholder="HTMLソース、またはページ本文テキストを貼り付けてください..."></textarea>
+    <div class="btn-row">
+      <button class="btn-sec" onclick="parseContent()">🔍 内容を読み取る</button>
+    </div>
+    <div class="pp" id="pp"><div id="ppItems"></div></div>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">2</div><div class="step-ttl">スタイルを選ぶ</div></div>
+    <p class="step-desc">インフォグラフィックのスタイルを選んでください</p>
+    <div class="sgrid" id="styleGrid"></div>
+    <button class="btn-auto" onclick="autoStyle()">✨ コンテンツに合うスタイルをおまかせで選ぶ</button>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">3</div><div class="step-ttl">生成する</div></div>
+    <p class="step-desc">NotebookLM用設計書とMidJourneyプロンプトをまとめて生成します</p>
+    <button class="btn-main" id="genBtn" onclick="generate()" disabled>✦ 設計書＋MJプロンプトを生成する</button>
+  </div>
+
+  <div class="out-area" id="outArea">
+    <div class="tabs">
+      <button class="tab on" id="tNB" onclick="switchTab('nb')">📋 NotebookLM用テキスト</button>
+      <button class="tab" id="tMJ" onclick="switchTab('mj')">🎨 MidJourneyプロンプト</button>
+    </div>
+    <div class="tp on" id="pNB">
+      <div class="outbox" id="outBox"></div>
+      <div class="btn-row">
+        <button class="btn-sec" onclick="cp('outBox','NotebookLM用をコピーしました！')">📋 コピー</button>
+        <button class="btn-ghost" onclick="resetS()">↺ リセット</button>
+      </div>
+    </div>
+    <div class="tp" id="pMJ">
+      <div id="mjOut"></div>
+      <div class="mjtip">💡 英語プロンプトをMidJourneyの /imagine コマンドの後に貼り付けてください。日本語解説はデザイン確認用です。</div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn-sec gld" onclick="cpMJ()">🎨 英語プロンプトをコピー</button>
+        <button class="btn-ghost" onclick="resetS()">↺ リセット</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- インフォチラシ -->
+<div class="page" id="chirashiPage">
+  <button class="back-btn" onclick="goHome()">← モード選択に戻る</button>
+  <div class="chirashi-wrap">
+
+    <!-- 左：フォーム -->
+    <div>
+
+      <!-- STEP 0: 自動読み取り -->
+      <div class="step">
+        <div class="step-header"><div class="step-num gld">1</div><div class="step-ttl">URLまたはHTMLから自動入力（任意）</div></div>
+        <p class="step-desc">貼り付けて読み取ると商品名・説明・特徴を自動でセットします</p>
+        <textarea id="c_source" style="min-height:90px;font-family:'Space Mono',monospace;font-size:11px;" placeholder="HTMLソース、またはページ本文テキストをここに貼り付けてください..."></textarea>
+        <div class="btn-row" style="margin-top:8px;">
+          <button class="btn-sec gld" onclick="parseChirashi()">🔍 読み取って自動入力する</button>
+          <button class="btn-ghost" onclick="document.getElementById('c_source').value='';">✕ クリア</button>
+        </div>
+        <!-- 読み取り結果バッジ -->
+        <div id="c_parsed_badge" style="display:none;margin-top:8px;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.3);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--gold);line-height:1.8;"></div>
+      </div>
+
+      <!-- STEP 1: 商品情報（自動入力 or 手入力） -->
+      <div class="step">
+        <div class="step-header"><div class="step-num gld">2</div><div class="step-ttl">商品・資料の情報を確認・編集</div></div>
+        <p class="step-desc">自動入力後も自由に編集できます。入力のたびにプレビューが更新されます</p>
+        <div class="input-grp"><div class="lbl">カテゴリタグ（任意）</div><input type="text" id="c_cat" placeholder="例：AIツール / 資料テンプレ / 動画講座" oninput="uc()"></div>
+        <div class="input-grp"><div class="lbl">タイトル（商品名）</div><input type="text" id="c_ttl" placeholder="例：よみとりくん Pro版" oninput="uc()"></div>
+        <div class="input-grp"><div class="lbl">キャッチコピー</div><input type="text" id="c_ctch" placeholder="例：AIがテキストを一瞬で読み取る" oninput="uc()"></div>
+        <div class="input-grp"><div class="lbl">概要・説明文</div><textarea id="c_desc" style="min-height:70px;" placeholder="商品・資料の説明を入力してください" oninput="uc()"></textarea></div>
+        <div class="input-grp"><div class="lbl">特徴・ポイント（改行で区切って最大4項目）</div><textarea id="c_feats" style="min-height:80px;" placeholder="特徴1&#10;特徴2&#10;特徴3&#10;特徴4" oninput="uc()"></textarea></div>
+      </div>
+
+      <!-- STEP 2: 販売情報（手入力のみ） -->
+      <div class="step">
+        <div class="step-header"><div class="step-num gld">3</div><div class="step-ttl">販売情報を入力</div></div>
+        <p class="step-desc">価格・URL・PWはご自身で入力してください</p>
+        <div class="input-grp"><div class="lbl">価格（例：¥980 / 月）</div><input type="text" id="c_price" placeholder="¥980 / 月" oninput="uc()"></div>
+        <div class="input-grp"><div class="lbl">URL（QRコードが自動生成されます）</div><input type="url" id="c_url" placeholder="https://example.pages.dev" oninput="uc()"></div>
+        <div class="input-grp"><div class="lbl">パスワード（PW）</div><input type="text" id="c_pw" placeholder="例：mikke2024" oninput="uc()"></div>
+      </div>
+
+      <!-- STEP 3: スタイル -->
+      <div class="step">
+        <div class="step-header"><div class="step-num gld">4</div><div class="step-ttl">デザインスタイルを選ぶ</div></div>
+        <div class="sgrid" id="cStyleGrid"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-main gld" style="flex:1;" onclick="printC()">🖨️ 印刷 / PDF保存</button>
+        <button class="btn-ghost" onclick="resetC()">↺ リセット</button>
+      </div>
+    </div>
+
+    <!-- 右：プレビュー -->
+    <div>
+      <div class="preview-box">
+        <div class="preview-lbl">🎯 PREVIEW — リアルタイムプレビュー</div>
+        <div id="chirashiDoc">
+          <!-- ヘッダー帯 -->
+          <div class="ch-head" id="ch_head" style="background:linear-gradient(135deg,#1a3a6b,#c0932a);">
+            <div class="ch-tag" id="ch_tag">みっけシリーズ</div>
+            <div class="ch-title" id="ch_ttl">タイトルを入力してください</div>
+            <div class="ch-catch" id="ch_ctch">キャッチコピーがここに入ります</div>
+          </div>
+          <!-- ボディ -->
+          <div class="ch-body">
+            <div class="ch-sec" id="ch_sec1" style="color:#1a3a6b;border-color:#1a3a6b;">OVERVIEW</div>
+            <div class="ch-desc" id="ch_desc">概要・説明文がここに表示されます。</div>
+            <div class="ch-sec" id="ch_sec2" style="color:#1a3a6b;border-color:#1a3a6b;">FEATURES</div>
+            <div class="ch-feats" id="ch_feats">
+              <div class="ch-feat"><div class="ch-fnum" style="background:#1a3a6b;">1</div>特徴を入力してください</div>
+            </div>
+          </div>
+          <!-- 価格帯 -->
+          <div class="ch-price" id="ch_priceBand" style="background:linear-gradient(90deg,#1a3a6b,#c0932a);">
+            <div>
+              <div class="price-lbl">PRICE</div>
+              <div class="price-val" id="ch_price">¥ ---</div>
+            </div>
+            <div style="color:rgba(255,255,255,0.75);font-size:11px;text-align:right;">お申し込みは<br>右記QRコードから</div>
+          </div>
+          <!-- フッター -->
+          <div class="ch-foot">
+            <div class="ch-foot-info">
+              <div class="frow">
+                <div class="flbl" id="ch_urlLbl" style="background:#1a3a6b;">URL</div>
+                <div class="fval" id="ch_url">URLを入力してください</div>
+              </div>
+              <div class="frow" id="ch_pwRow">
+                <div class="flbl" id="ch_pwLbl" style="background:#c0932a;">PW</div>
+                <div class="fval" id="ch_pw">（パスワードなし）</div>
+              </div>
+            </div>
+            <div class="qr-wrap">
+              <div id="qrEl"></div>
+              <div class="qr-cap">QR CODE</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--muted);">※ 「🖨️ 印刷/PDF保存」でブラウザの印刷ダイアログから保存できます</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ======== スタイル定義 ========
+const ST = [
+  {id:'professional',e:'💼',jp:'プロフェッショナル',en:'Professional',u:'提案資料・ビジネスSNS',kw:['ビジネス','提案','会社','サービス','実績','企業','事業'],m:'#1a3a6b',a:'#c0932a'},
+  {id:'bento',e:'🍱',jp:'弁当箱',en:'Bento Grid',u:'機能一覧・複数トピック',kw:['機能','特徴','一覧','比較','種類','メニュー'],m:'#2a6b4a',a:'#3ab8f0'},
+  {id:'sketch',e:'✏️',jp:'スケッチ',en:'Sketch',u:'教育・若い層向け',kw:['学習','教育','研修','アイデア','ワークショップ'],m:'#7b4f2a',a:'#e8943a'},
+  {id:'kawaii',e:'🌸',jp:'カワイイ',en:'Kawaii',u:'SNS・カジュアル',kw:['SNS','インスタ','美容','カフェ','かわいい'],m:'#b44a7a',a:'#e87ab4'},
+  {id:'science',e:'🔬',jp:'科学',en:'Science',u:'技術解説・IT',kw:['技術','AI','システム','データ','研究','IT'],m:'#0a3060',a:'#00c8b8'},
+  {id:'anime',e:'🎌',jp:'アニメ',en:'Anime',u:'ストーリー性重視',kw:['ストーリー','物語','キャラ','感動'],m:'#4a1a7a',a:'#f03860'},
+  {id:'clay3d',e:'🟦',jp:'クレイ',en:'3D Clay',u:'アイキャッチ・PR',kw:['商品','製品','アプリ','プロダクト','PR'],m:'#2a6090',a:'#60c8f0'},
+  {id:'editorial',e:'📰',jp:'エディトリアル',en:'Editorial',u:'報告・記事要約',kw:['報告','ニュース','記事','まとめ','事例'],m:'#1a1a1a',a:'#c02020'},
+  {id:'storyboard',e:'🎬',jp:'説明的',en:'Storyboard',u:'手順・プロセス',kw:['手順','ステップ','フロー','プロセス','使い方'],m:'#2a5a3a',a:'#78c878'},
+  {id:'bricks',e:'🧱',jp:'ブロック',en:'Bricks',u:'組織図・階層',kw:['組織','構造','体制','要素','階層'],m:'#3a3020',a:'#d09030'}
+];
+
+// ======== 画面遷移 ========
+function goHome() {
+  document.getElementById('modePage').style.display='';
+  document.getElementById('shiryoPage').classList.remove('show');
+  document.getElementById('chirashiPage').classList.remove('show');
+}
+function goMode(m) {
+  document.getElementById('modePage').style.display='none';
+  if (m==='shiryo') {
+    document.getElementById('shiryoPage').classList.add('show');
+    renderGrid('styleGrid', selectS);
+  } else {
+    document.getElementById('chirashiPage').classList.add('show');
+    renderGrid('cStyleGrid', selectCS, 'professional');
+    uc();
+  }
+}
+
+// ======== グリッド共通 ========
+function renderGrid(id, fn, defaultSel) {
+  const g = document.getElementById(id);
+  if (!g) return;
+  g.innerHTML = ST.map(s=>`
+    <div class="scard${s.id===defaultSel?' sel':''}" id="${id}-${s.id}" onclick="${fn.name}('${s.id}')">
+      <span class="se">${s.e}</span><span class="snj">${s.jp}</span>
+      <span class="sne">${s.en}</span><span class="su">${s.u}</span>
+    </div>`).join('');
+}
+
+// ======== インフォ資料 ========
+let selS=null, pd={};
+
+function selectS(id) {
+  selS=id;
+  document.querySelectorAll('#styleGrid .scard').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('styleGrid-'+id)?.classList.add('sel');
+  updBtn();
+}
+function updBtn() {
+  const b=document.getElementById('genBtn');
+  if (!b) return;
+  b.disabled=!(selS && (document.getElementById('inputArea')?.value.trim().length||0)>10);
+}
+function parseContent() {
+  const inp=document.getElementById('inputArea').value.trim();
+  if (!inp){showToast('テキストを貼り付けてください');return;}
+  const tmp=document.createElement('div'); tmp.innerHTML=inp;
+  const plain=tmp.innerText||tmp.textContent||inp;
+  const tm=inp.match(/<title[^>]*>([^<]+)<\/title>/i)||inp.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+  const title=tm?tm[1].trim():plain.replace(/\s+/g,' ').trim().split('。')[0].slice(0,40);
+  const hh=[];
+  for (const m of inp.matchAll(/<h[1-3][^>]*>([^<]+)<\/h[1-3]>/gi)){
+    const t=m[1].replace(/<[^>]+>/g,'').trim();
+    if(t&&!hh.includes(t))hh.push(t); if(hh.length>=6)break;
+  }
+  const ww=plain.replace(/[^\u3040-\u9fff\w]/g,' ').split(/\s+/).filter(w=>w.length>=2&&w.length<=10)
+    .reduce((a,w)=>{a[w]=(a[w]||0)+1;return a;},{});
+  const kw=Object.entries(ww).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([w])=>w);
+  const nums=[...plain.matchAll(/[\d,]+[年月日人件社%万億円時間]/g)].map(m=>m[0]).filter((v,i,a)=>a.indexOf(v)===i).slice(0,5);
+  const body=plain.replace(/\s+/g,' ').trim().slice(0,200);
+  pd={title,headings:hh,keywords:kw,nums,bodyText:body,full:plain};
+  document.getElementById('ppItems').innerHTML=`
+    <div class="pi"><span class="pl">📌 タイトル</span><span class="pv">${title||'取得できませんでした'}</span></div>
+    <div class="pi"><span class="pl">📋 見出し</span><span class="pv">${hh.length?hh.join(' / '):'なし'}</span></div>
+    <div class="pi"><span class="pl">🔑 キーワード</span><span class="pv">${kw.join(' ・ ')}</span></div>
+    <div class="pi"><span class="pl">📊 数字</span><span class="pv">${nums.length?nums.join(' / '):'なし'}</span></div>
+    <div class="pi"><span class="pl">📝 冒頭</span><span class="pv">${body}…</span></div>`;
+  document.getElementById('pp').classList.add('show','fi');
+  showToast('✅ 読み取り完了！スタイルを選んでください');
+  updBtn();
+}
+function autoStyle() {
+  const inp=document.getElementById('inputArea').value.trim();
+  if(!inp){showToast('先にテキストを読み取ってください');return;}
+  const text=pd.full||inp;
+  const sc=ST.map(s=>({id:s.id,score:s.kw.filter(k=>text.includes(k)).length}));
+  sc.sort((a,b)=>b.score-a.score);
+  const best=sc[0].score>0?sc[0].id:'professional';
+  selectS(best);
+  showToast(`✨ 「${ST.find(s=>s.id===best).jp}」スタイルがおすすめです！`);
+}
+function generate() {
+  const s=ST.find(x=>x.id===selS);
+  const h=pd.headings||[]; const kw=pd.keywords||[]; const n=pd.nums||[];
+  const title=pd.title||'タイトル不明';
+  const body=(pd.full||'').slice(0,600);
+  const sec={
+    professional:`■ 背景・課題\n${h[0]||'現状の課題'}\n\n■ ソリューション\n${h[1]||'提供価値'}\n\n■ 実績\n${n.join(' / ')||'追記'}\n\n■ 次のステップ\n${h[2]||'お問い合わせ'}`,
+    bento:`■ グリッド構成\n大カード：${h[0]||'コアバリュー'}\nカード2：${h[1]||'特徴1'}\nカード3：${h[2]||'特徴2'}\nカード4（数字）：${n[0]||'実績数値'}\nカード5：${h[3]||'特徴3'}\nカード6：${h[4]||'まとめ'}`,
+    sketch:`■ 手書き構成\n中心：${h[0]||title}\n枝1：${h[1]||'ポイント1'}\n枝2：${h[2]||'ポイント2'}\n枝3：${h[3]||'ポイント3'}\nキーワード：${kw.slice(0,3).join(' × ')}`,
+    kawaii:`■ かわいい構成\n❶ ${h[0]||'はじめに'} 🌸\n❷ ${h[1]||'ポイント1'} 🎀\n❸ ${h[2]||'ポイント2'} 💕\n❹ ${h[3]||'まとめ'} ✨`,
+    science:`■ 技術構成\nSECTION 01：${h[0]||'概要'}\nSECTION 02：${h[1]||'仕組み'}\nSECTION 03 データ：${n.join(' / ')||'追記'}\nSECTION 04：${h[2]||'活用事例'}`,
+    anime:`■ 5コマ構成\nコマ1：${h[0]||'登場'}\nコマ2：${h[1]||'葛藤'}\nコマ3：${h[2]||'転換'}\nコマ4：${n[0]||'成果'}\nコマ5：${h[3]||'未来へ'}`,
+    clay3d:`■ クレイ構成\n中央：${h[0]||title}\n左：${h[1]||'特徴1'}\n右：${h[2]||'特徴2'}\n数値：${n[0]||'追記'}`,
+    editorial:`■ 雑誌構成\n大見出し：${title.toUpperCase()}\nCHAPTER 1：${h[0]||'背景'}\nCHAPTER 2：${h[1]||'展開'}\nDATA：${n.join(' / ')||'追記'}\nCONCLUSION：${h[2]||'結論'}`,
+    storyboard:`■ ステップ構成\nSTEP 1：${h[0]||'認識'}\nSTEP 2：${h[1]||'行動'}\nSTEP 3：${h[2]||'実行'} / 実績：${n[0]||'成果'}\nSTEP 4：${h[3]||'ゴール'}`,
+    bricks:`■ 階層構成\nレベル1：${h[0]||'ビジョン'}\nレベル2：${h[1]||'戦略A'} / ${h[2]||'戦略B'}\nレベル3：${kw.slice(0,4).join(' / ')}\n実績：${n.join(' / ')||'追記'}`
+  };
+  const out=`=== NotebookLM 投入用インフォグラフィック設計書 ===
+生成日：${new Date().toLocaleDateString('ja-JP')}
+スタイル：${s.jp}（${s.en}）
+タイトル：${title}
+生成：インフォみっけ（Smile Plus Consulting）
+
+${sec[s.id]||sec.professional}
+
+■ キーワード
+${kw.join(' ／ ')}
+
+■ 推奨カラー
+メイン：${s.m}　アクセント：${s.a}
+
+■ コンテンツ本文（参照用）
+${body}
+
+=== 利用方法 ===
+NotebookLMの「ソースを追加」→「テキストをコピーする」に貼り付けてください。`;
+  document.getElementById('outBox').textContent=out;
+  buildMJ(s,title,kw,n,h);
+  document.getElementById('outArea').classList.add('show','fi');
+  document.getElementById('outArea').scrollIntoView({behavior:'smooth',block:'start'});
+  showToast('🎉 NotebookLM＋MJプロンプト生成完了！');
+}
+function buildMJ(s,title,kw,n,h) {
+  const k=kw.slice(0,3).join(', ');
+  const MJ={
+    professional:{jp:`クリーンなビジネスインフォグラフィック。ネイビー×ホワイト×ゴールド。テーマ「${title}」を左右2カラムで表現。`,en:`clean professional infographic, navy white gold palette, two-column layout, serif typography, bold statistics, LinkedIn-ready, ${k} --ar 4:3 --style raw --v 6.1`},
+    bento:{jp:`弁当箱型グリッドレイアウト。角丸カード構成。テーマ「${title}」を整理。`,en:`bento grid infographic, card-based rounded layout, pastel color blocks, clean sans-serif, ${k} --ar 4:3 --style raw --v 6.1`},
+    sketch:{jp:`手書き風スケッチ。「${title}」をマインドマップ風に展開。クリーム紙質感。`,en:`hand-drawn sketch infographic, pencil marker style, mind map, cream paper texture, doodle, ${k} --ar 4:3 --style raw --v 6.1`},
+    kawaii:{jp:`かわいいパステルデザイン。「${title}」を絵文字キャラと表現。SNS映え重視。`,en:`kawaii cute infographic, pastel pink lavender palette, rounded typography, chibi illustrations, ${k} --ar 1:1 --style raw --v 6.1`},
+    science:{jp:`科学技術系ビジュアル。ダークネイビー背景にシアン蛍光アクセント。`,en:`science technology infographic, dark navy background, cyan neon green accents, data visualization, circuit pattern, ${k} --ar 16:9 --style raw --v 6.1`},
+    anime:{jp:`日本アニメスタイル。鮮やか原色グラデーション。5コマストーリー構成。`,en:`anime style infographic storyboard, vibrant saturated colors, manga panel layout, speed lines, ${k} --ar 16:9 --style raw --v 6.1`},
+    clay3d:{jp:`粘土細工3Dグラフィック。「${title}」を可愛い3Dオブジェで表現。`,en:`3D clay render infographic, soft plasticine texture, pastel palette, volumetric lighting, ${k} --ar 4:3 --style raw --v 6.1`},
+    editorial:{jp:`高品質雑誌スタイル。タイポグラフィ主役。セリフ体大見出し。`,en:`editorial magazine infographic, typography-driven, serif headline uppercase, off-white paper, red accents, ${k} --ar 3:4 --style raw --v 6.1`},
+    storyboard:{jp:`絵コンテスタイル。時系列コマ割りで手順表現。`,en:`storyboard process infographic, sequential panel layout, step by step arrows, simple icons, ${k} --ar 16:9 --style raw --v 6.1`},
+    bricks:{jp:`レンガ積み階層構造。ピラミッド型。色分けブロック図解。`,en:`bricks block hierarchy infographic, pyramid layout, stacked rectangles bold borders, dark charcoal, ${k} --ar 4:3 --style raw --v 6.1`}
+  };
+  const t=MJ[s.id]||MJ.professional;
+  document.getElementById('mjOut').innerHTML=`
+    <div class="mjb"><div class="mjl">🎨 ${s.jp}｜MidJourneyプロンプト</div>
+    <div class="mjjp">${t.jp}</div>
+    <div class="mjen" id="mjEn">${t.en}</div></div>
+    <div class="mjb"><div class="mjl">⚙️ パラメータ解説</div>
+    <div class="mjjp">--ar：アスペクト比（4:3=スライド / 1:1=SNS / 16:9=ワイド / 3:4=縦長）<br>--style raw：AIっぽさを抑えたリアル仕上がり<br>--v 6.1：最新版<br>--no text：テキスト不要の場合に追加可</div></div>`;
+}
+function switchTab(t) {
+  ['NB','MJ'].forEach(x=>{ document.getElementById('t'+x).classList.remove('on'); document.getElementById('p'+x).classList.remove('on'); });
+  if(t==='nb'){ document.getElementById('tNB').classList.add('on'); document.getElementById('pNB').classList.add('on'); }
+  else { document.getElementById('tMJ').classList.add('on'); document.getElementById('pMJ').classList.add('on'); }
+}
+function cp(id,msg){ navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>showToast('✅ '+msg)); }
+function cpMJ(){ navigator.clipboard.writeText(document.getElementById('mjEn')?.textContent||'').then(()=>showToast('✅ MJプロンプトをコピーしました！')); }
+function resetS() {
+  document.getElementById('inputArea').value='';
+  document.getElementById('pp').classList.remove('show');
+  document.getElementById('outArea').classList.remove('show');
+  document.getElementById('mjOut').innerHTML='';
+  document.querySelectorAll('#styleGrid .scard').forEach(c=>c.classList.remove('sel'));
+  switchTab('nb'); selS=null; pd={}; updBtn();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ======== インフォチラシ ========
+let cSel='professional';
+
+function selectCS(id) {
+  cSel=id;
+  document.querySelectorAll('#cStyleGrid .scard').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('cStyleGrid-'+id)?.classList.add('sel');
+  uc();
+}
+
+function parseChirashi() {
+  const inp = document.getElementById('c_source').value.trim();
+  if (!inp) { showToast('HTMLまたはテキストを貼り付けてください'); return; }
+
+  // HTMLタグ除去
+  const tmp = document.createElement('div');
+  tmp.innerHTML = inp;
+  const plain = (tmp.innerText || tmp.textContent || inp).replace(/\s+/g, ' ').trim();
+
+  // タイトル抽出
+  const tm = inp.match(/<title[^>]*>([^<]+)<\/title>/i)
+           || inp.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+  const title = tm ? tm[1].replace(/<[^>]+>/g,'').trim() : plain.split('。')[0].slice(0, 40);
+
+  // 見出し（h2, h3）を特徴候補として抽出
+  const hh = [];
+  for (const m of inp.matchAll(/<h[2-3][^>]*>([^<]+)<\/h[2-3]>/gi)) {
+    const t = m[1].replace(/<[^>]+>/g,'').trim();
+    if (t && t !== title && !hh.includes(t)) hh.push(t);
+    if (hh.length >= 4) break;
+  }
+
+  // キャッチコピー候補：metaディスクリプション or OGP or 最初の短文
+  const metaDesc = inp.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
+                || inp.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i)
+                || inp.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i);
+  const catchCopy = metaDesc ? metaDesc[1].trim().slice(0, 60)
+    : plain.split('。').find(s => s.length > 10 && s.length < 60) || '';
+
+  // 概要：metaがあればそのまま、なければ本文冒頭100文字
+  const descText = metaDesc ? metaDesc[1].trim().slice(0, 120)
+    : plain.slice(0, 100);
+
+  // カテゴリ：OGP site_name or 空
+  const siteM = inp.match(/<meta[^>]+property=["']og:site_name["'][^>]+content=["']([^"']+)["']/i);
+  const category = siteM ? siteM[1].trim() : '';
+
+  // 各フィールドに自動入力
+  if (title) document.getElementById('c_ttl').value = title;
+  if (catchCopy) document.getElementById('c_ctch').value = catchCopy;
+  if (descText) document.getElementById('c_desc').value = descText;
+  if (hh.length) document.getElementById('c_feats').value = hh.join('\n');
+  if (category) document.getElementById('c_cat').value = category;
+
+  // バッジ表示
+  const badge = document.getElementById('c_parsed_badge');
+  badge.style.display = 'block';
+  badge.innerHTML = `✅ 自動入力しました<br>
+    📌 タイトル：${title || '（取得できませんでした）'}<br>
+    💬 キャッチ：${catchCopy || '（取得できませんでした）'}<br>
+    📋 特徴：${hh.length ? hh.join(' ／ ') : '（見出しが見つかりませんでした）'}`;
+
+  uc();
+  showToast('✅ 自動入力完了！内容を確認・編集してください');
+}
+
+
+  const s=ST.find(x=>x.id===cSel)||ST[0];
+  const main=s.m, acc=s.a;
+  const cat=document.getElementById('c_cat').value||'みっけシリーズ';
+  const ttl=document.getElementById('c_ttl').value||'タイトルを入力してください';
+  const ctch=document.getElementById('c_ctch').value||'キャッチコピーがここに入ります';
+  const desc=document.getElementById('c_desc').value||'概要・説明文がここに表示されます。';
+  const feats=(document.getElementById('c_feats').value||'').split('\n').filter(f=>f.trim()).slice(0,4);
+  const price=document.getElementById('c_price').value||'---';
+  const url=document.getElementById('c_url').value;
+  const pw=document.getElementById('c_pw').value;
+
+  document.getElementById('ch_head').style.background=`linear-gradient(135deg,${main},${acc})`;
+  document.getElementById('ch_tag').textContent=cat;
+  document.getElementById('ch_ttl').textContent=ttl;
+  document.getElementById('ch_ctch').textContent=ctch;
+  ['ch_sec1','ch_sec2'].forEach(id=>{ document.getElementById(id).style.color=main; document.getElementById(id).style.borderColor=main; });
+  document.getElementById('ch_desc').textContent=desc;
+  document.getElementById('ch_feats').innerHTML=(feats.length?feats:['特徴を入力してください']).map((f,i)=>`
+    <div class="ch-feat"><div class="ch-fnum" style="background:${main};">${i+1}</div>${f}</div>`).join('');
+  document.getElementById('ch_priceBand').style.background=`linear-gradient(90deg,${main},${acc})`;
+  document.getElementById('ch_price').textContent=price;
+  document.getElementById('ch_urlLbl').style.background=main;
+  document.getElementById('ch_url').textContent=url||'URLを入力してください';
+  const pwRow=document.getElementById('ch_pwRow');
+  document.getElementById('ch_pwLbl').style.background=acc;
+  if(pw){ pwRow.style.display=''; document.getElementById('ch_pw').textContent=pw; }
+  else { pwRow.style.display='none'; }
+
+  // QR生成
+  const qrEl=document.getElementById('qrEl');
+  qrEl.innerHTML='';
+  if(url&&url.startsWith('http')) {
+    try {
+      new QRCode(qrEl,{text:url,width:76,height:76,colorDark:main,colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+    } catch(e) {
+      qrEl.innerHTML='<div style="width:76px;height:76px;background:#eee;display:flex;align-items:center;justify-content:center;font-size:9px;color:#999;border-radius:4px;">QR</div>';
+    }
+  } else {
+    qrEl.innerHTML='<div style="width:76px;height:76px;background:#2a3a4a;display:flex;align-items:center;justify-content:center;font-size:9px;color:#7a9bb5;border-radius:4px;text-align:center;line-height:1.5;">URL入力で<br>自動生成</div>';
+  }
+}
+
+function printC() {
+  const t=document.getElementById('c_ttl').value||'インフォチラシ';
+  document.title=t+' - インフォみっけ';
+  window.print();
+  setTimeout(()=>{ document.title='インフォみっけ｜みっけシリーズ'; },2000);
+}
+
+function resetC() {
+  ['c_source','c_cat','c_ttl','c_ctch','c_desc','c_feats','c_price','c_url','c_pw'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('c_parsed_badge').style.display='none';
+  cSel='professional';
+  document.querySelectorAll('#cStyleGrid .scard').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('cStyleGrid-professional')?.classList.add('sel');
+  uc();
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+document.getElementById('inputArea')?.addEventListener('input',updBtn);
+</script>
+</body>
+</html>
